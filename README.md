@@ -59,3 +59,12 @@ To learn more about this template and Dagster in general:
 - [Dagster Documentation](https://docs.dagster.io/)
 - [Dagster University](https://courses.dagster.io/)
 - [Dagster Slack Community](https://dagster.io/slack)
+
+
+## AWS commands
+aws s3api create-bucket --bucket nk-data-lake --region us-west-1 --create-bucket-configuration LocationConstraint=us-west-1
+
+aws s3api put-bucket-versioning --bucket nk-data-lake --versioning-configuration Status=Enabled
+aws s3api put-bucket-encryption --bucket nk-data-lake --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+
+aws s3 ls s3://nk-data-lake/raw-data/waves/
