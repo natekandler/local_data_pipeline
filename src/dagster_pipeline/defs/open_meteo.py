@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Any, Dict, List
 
 import dagster as dg
@@ -10,6 +11,7 @@ from deltalake import write_deltalake
 WAVE_API_URL = "https://marine-api.open-meteo.com/v1/marine"
 LATITUDE = 33.1505
 LONGITUDE = -117.3483
+LOCATION_NAME = os.environ.get("LOCATION_NAME", "Tamarack")
 
 
 def fetch_wave_data() -> Dict[str, Any]:
@@ -35,24 +37,7 @@ def fetch_wave_data() -> Dict[str, Any]:
     return response.json()
 
 
-def process_wave_data(data: Dict[str, Any]) -> pd.DataFrame:
-    """Transform API response into a pandas DataFrame with a date partition column."""
-    hourly = data["hourly"]
-    frame = pd.DataFrame(
-        {
-            "timestamp": pd.to_datetime(hourly["time"]),
-            "wave_height": hourly["wave_height"],
-            "wave_direction": hourly["wave_direction"],
-            "wind_wave_direction": hourly["wind_wave_direction"],
-            "swell_wave_height": hourly["swell_wave_height"],
-            "swell_wave_direction": hourly["swell_wave_direction"],
-            "swell_wave_period": hourly["swell_wave_period"],
-        }
-    )
-
-    # Partition column as YYYY-MM-DD string for stable partitioning
-    frame["dt"] = frame["timestamp"].dt.strftime("%Y-%m-%d")
-    return frame
+# Note: We now store raw payloads as single rows with (timestamp, location, data)
 
 
 @dg.asset(
@@ -60,7 +45,11 @@ def process_wave_data(data: Dict[str, Any]) -> pd.DataFrame:
     group_name="wave_data",
 )
 def open_meteo(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
-    """Fetch wave data and append to a Delta Lake table on S3 partitioned by date."""
+    """Fetch wave data and write a single-row raw record to Delta on S3.
+
+    Columns: timestamp (UTC), location (string), data (JSON string)
+    Partitioned by: location
+    """
     bucket_name = os.environ.get("RAW_BUCKET", "dwh")
     base_prefix = os.environ.get("RAW_PREFIX", "raw/wave_data")
     s3_uri = f"s3://{bucket_name}/{base_prefix}"
@@ -70,28 +59,36 @@ def open_meteo(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
     )
 
     raw = fetch_wave_data()
-    df = process_wave_data(raw)
 
-    unique_dates: List[str] = sorted(df["dt"].unique().tolist())
+    # Single-row record with raw payload
+    now_ts = pd.Timestamp.now(tz="UTC")
+    record = pd.DataFrame(
+        [
+            {
+                "timestamp": now_ts,
+                "location": LOCATION_NAME,
+                "data": json.dumps(raw),
+            }
+        ]
+    )
 
-    # Write or append to Delta table; will create the table if it doesn't exist
-    # Credentials are read from environment: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, etc.
+    # Write or append to Delta table; creates the table if it does not exist
     write_deltalake(
         s3_uri,
-        df,
+        record,
         mode="append",
-        partition_by=["dt"],
+        partition_by=["location"],
     )
 
     context.log.info(
-        f"Wrote {len(df)} rows across {len(unique_dates)} date partitions to {s3_uri}"
+        f"Wrote 1 raw record for location '{LOCATION_NAME}' to {s3_uri}"
     )
 
     return dg.MaterializeResult(
         metadata={
-            "rows": len(df),
-            "partitions": len(unique_dates),
-            "dates": ",".join(unique_dates),
+            "rows": 1,
+            "location": LOCATION_NAME,
+            "timestamp": now_ts.isoformat(),
             "delta_table": s3_uri,
         }
     )
