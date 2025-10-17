@@ -6,8 +6,8 @@ dependencies = [
     "dagster==1.11.12",
     "pandas",
     "requests",
-    "pyarrow",
-    "deltalake",
+    "duckdb",
+    "dbt-duckdb>=1.9.6",
 ]
 
 [dependency-groups]

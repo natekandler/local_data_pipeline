@@ -68,3 +68,10 @@ aws s3api put-bucket-versioning --bucket nk-data-lake --versioning-configuration
 aws s3api put-bucket-encryption --bucket nk-data-lake --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
 
 aws s3 ls s3://nk-data-lake/raw-data/waves/
+
+
+DBT
+dbt run --project-dir ./dbt -s stg_wave_open_meteo
+
+
+duckdb /Users/nkandler/projects/dagster/data/waves.duckdb

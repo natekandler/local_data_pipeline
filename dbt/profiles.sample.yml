@@ -1,0 +1,9 @@
+waves:
+  target: dev
+  outputs:
+    duckdb:
+      type: duckdb
+      path: ./data/waves.duckdb
+      schema: waves
+      threads: 4
+
