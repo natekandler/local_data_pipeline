@@ -8,6 +8,7 @@ dependencies = [
     "requests",
     "duckdb",
     "dbt-duckdb>=1.9.6",
+    "dagster-dbt",
 ]
 
 [dependency-groups]

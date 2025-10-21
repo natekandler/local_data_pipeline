@@ -75,3 +75,74 @@ dbt run --project-dir ./dbt -s stg_wave_open_meteo
 
 
 duckdb /Users/nkandler/projects/dagster/data/waves.duckdb
+
+duckdb commands
+duckdb /Users/nkandler/projects/dagster/data/waves.duckdb
+-- list all tables (current schema)
+.tables
+-- list schemas
+SELECT schema_name FROM information_schema.schemata ORDER BY 1;
+-- list all tables across schemas
+SELECT table_schema, table_name, table_type
+FROM information_schema.tables
+ORDER BY 1,2;
+-- list tables in schema 'waves'
+SELECT table_name FROM information_schema.tables
+WHERE table_schema='waves' AND table_type='BASE TABLE';
+-- list views in schema 'waves'
+SELECT table_name FROM information_schema.tables
+WHERE table_schema='waves' AND table_type='VIEW';
+
+SELECT * FROM raw.open_meteo ORDER BY timestamp DESC LIMIT 5;
+
+
+## Scheduling nightly runs
+
+This project defines a nightly schedule that materializes all assets.
+
+- Job: `nightly_assets`
+- Schedule: `nightly_assets_schedule` (defaults to 00:00 daily)
+
+### Enable in local dev (recommended)
+
+1. Start the web UI and embedded daemon:
+
+   ```bash
+   dg dev
+   ```
+
+2. Open `http://localhost:3000` and navigate to Schedules. Toggle on `nightly_assets_schedule`.
+
+3. To test immediately without waiting, launch the job once:
+
+   ```bash
+   dg job launch -j nightly_assets
+   ```
+
+### Enable in a long-running process (production-like)
+
+Run the webserver and daemon as separate processes (or services):
+
+```bash
+dagster-webserver -h 0.0.0.0 -p 3000
+```
+
+```bash
+dagster-daemon run
+```
+
+Then toggle `nightly_assets_schedule` on in the UI.
+
+### Customize schedule time and timezone
+
+You can override the cron and timezone via environment variables:
+
+```bash
+export NIGHTLY_CRON="0 0 * * *"           # default: midnight daily
+export SCHEDULE_TZ="America/Los_Angeles"  # default: UTC
+```
+
+Common examples:
+
+- Run at 2:30am local time: `NIGHTLY_CRON="30 2 * * *"`
+- Run every day at 1:00am UTC: leave defaults and toggle schedule on.
