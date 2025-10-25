@@ -146,3 +146,35 @@ Common examples:
 
 - Run at 2:30am local time: `NIGHTLY_CRON="30 2 * * *"`
 - Run every day at 1:00am UTC: leave defaults and toggle schedule on.
+
+## Using MotherDuck instead of local DuckDB
+
+This project can write and query to MotherDuck.
+
+### Python asset (Open Meteo) to MotherDuck
+
+Set environment variables before running:
+
+```bash
+export MOTHERDUCK_TOKEN="<your_token>"   # obtained from MotherDuck
+export MOTHERDUCK_DB="waves"             # database name in MotherDuck
+```
+
+The asset will connect to `md:${MOTHERDUCK_DB}` automatically when `MOTHERDUCK_DB` is set. Clear it to revert to local DuckDB.
+
+### dbt profile for MotherDuck
+
+Update `dbt/profiles.yml` to use the `motherduck` output (see `dbt/profiles.sample.yml`):
+
+```yaml
+waves:
+  target: motherduck
+  outputs:
+    motherduck:
+      type: duckdb
+      path: md:waves
+      schema: waves
+      threads: 4
+```
+
+Make sure `MOTHERDUCK_TOKEN` is available in the environment for dbt as well.

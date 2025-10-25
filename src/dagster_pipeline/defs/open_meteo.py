@@ -13,6 +13,8 @@ LATITUDE = 33.1505
 LONGITUDE = -117.3483
 LOCATION_NAME = os.environ.get("LOCATION_NAME", "Tamarack")
 DUCKDB_PATH = os.environ.get("DUCKDB_PATH", os.path.join(os.getcwd(), "data", "waves.duckdb"))
+# When set, use MotherDuck instead of local DuckDB file
+MOTHERDUCK_DB = os.environ.get("MOTHERDUCK_DB")  # e.g., "waves". Requires MOTHERDUCK_TOKEN in env
 
 LOCATIONS = {"Tamarack": {33.1505, -117.3483}, "Turnarounds": {33.1200, -117.3274}, "Oside_pier": {33.1934, -117.3860}}
 
@@ -38,6 +40,15 @@ def fetch_wave_data(latitude, longitude) -> Dict[str, Any]:
     response.raise_for_status()
     return response.json()
 
+def _connect_duckdb():
+    if MOTHERDUCK_DB:
+        # MOTHERDUCK_TOKEN should be present in the environment for auth
+        return duckdb.connect(f"md:{MOTHERDUCK_DB}")
+    # Fallback to local DuckDB file
+    os.makedirs(os.path.dirname(DUCKDB_PATH), exist_ok=True)
+    return duckdb.connect(DUCKDB_PATH)
+
+
 def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude, location) -> dg.MaterializeResult:
     context.log.info(
         f"Fetching wave data for coordinates: {latitude}, {longitude} and writing to DuckDB at {DUCKDB_PATH}"
@@ -50,7 +61,7 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
     json_payload = json.dumps(raw)
 
     # Append to DuckDB table raw.open_meteo
-    con = duckdb.connect(DUCKDB_PATH)
+    con = _connect_duckdb()
     try:
         con.execute("CREATE SCHEMA IF NOT EXISTS raw")
         con.execute(
@@ -70,16 +81,15 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
     finally:
         con.close()
 
-    context.log.info(
-        f"Wrote 1 raw record for location '{location}' to DuckDB at {DUCKDB_PATH}"
-    )
+    target = f"md:{MOTHERDUCK_DB}" if MOTHERDUCK_DB else DUCKDB_PATH
+    context.log.info(f"Wrote 1 raw record for location '{location}' to DuckDB at {target}")
 
     return dg.MaterializeResult(
         metadata={
             "rows": 1,
             "location": LOCATION_NAME,
             "timestamp": now_ts.isoformat(),
-            "duckdb_path": DUCKDB_PATH,
+            "duckdb_path": target,
             "table": "raw.open_meteo",
         }
     )
@@ -95,8 +105,9 @@ def open_meteo(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
     Columns: timestamp (UTC), location (string), data (JSON string)
     Partitioned by: location
     """
-    # Ensure DuckDB directory exists
-    os.makedirs(os.path.dirname(DUCKDB_PATH), exist_ok=True)
+    # Ensure local directory exists only when not using MotherDuck
+    if not MOTHERDUCK_DB:
+        os.makedirs(os.path.dirname(DUCKDB_PATH), exist_ok=True)
     
     for location in LOCATIONS:
         lat, lon = LOCATIONS[location]

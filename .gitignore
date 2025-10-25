@@ -204,3 +204,8 @@ __marimo__/
 
 # Dagster
 .tmp_dagster_*
+
+# DBT
+dbt/.user.yml
+dbt/target/
+dbt/logs/
