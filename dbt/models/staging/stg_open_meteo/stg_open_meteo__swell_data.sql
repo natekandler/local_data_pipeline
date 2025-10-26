@@ -7,7 +7,7 @@ with raw as (
   select
     location,
     json(data) as j
-  from {{ source('raw', 'open_meteo') }}
+  from {{ source('raw_open_meteo', 'swell_data') }}
 ),
 arrays as (
   select

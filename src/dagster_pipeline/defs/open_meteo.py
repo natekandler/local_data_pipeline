@@ -12,7 +12,7 @@ WAVE_API_URL = "https://marine-api.open-meteo.com/v1/marine"
 LATITUDE = 33.1505
 LONGITUDE = -117.3483
 LOCATION_NAME = os.environ.get("LOCATION_NAME", "Tamarack")
-DUCKDB_PATH = os.environ.get("DUCKDB_PATH", os.path.join(os.getcwd(), "data", "waves.duckdb"))
+DUCKDB_PATH = os.environ.get("DUCKDB_PATH", os.path.join(os.getcwd(), "data", "raw.duckdb"))
 # When set, use MotherDuck instead of local DuckDB file
 MOTHERDUCK_DB = os.environ.get("MOTHERDUCK_DB")  # e.g., "waves". Requires MOTHERDUCK_TOKEN in env
 
@@ -63,10 +63,11 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
     # Append to DuckDB table raw.open_meteo
     con = _connect_duckdb()
     try:
-        con.execute("CREATE SCHEMA IF NOT EXISTS raw")
+        # Use a schema that does not conflict with the database name
+        con.execute("CREATE SCHEMA IF NOT EXISTS open_meteo")
         con.execute(
             """
-            CREATE TABLE IF NOT EXISTS raw.open_meteo (
+            CREATE TABLE IF NOT EXISTS open_meteo.swell_data (
                 timestamp TIMESTAMP,
                 location TEXT,
                 data TEXT
@@ -75,7 +76,7 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
         )
         # Insert single row; let DuckDB parse ISO timestamp string into TIMESTAMP
         con.execute(
-            "INSERT INTO raw.open_meteo (timestamp, location, data) VALUES (?, ?, ?)",
+            "INSERT INTO open_meteo.swell_data (timestamp, location, data) VALUES (?, ?, ?)",
             [now_ts.isoformat(), location, json_payload],
         )
     finally:
@@ -90,7 +91,7 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
             "location": LOCATION_NAME,
             "timestamp": now_ts.isoformat(),
             "duckdb_path": target,
-            "table": "raw.open_meteo",
+            "table": "open_meteo.swell_data",
         }
     )
 

@@ -1,16 +1,17 @@
-name: waves
-version: 1.0.0
+name: motherduck_pipeline
+version: "1.0"
 config-version: 2
-
-profile: waves
+profile: default
 
 model-paths: ["models"]
-seed-paths: ["seeds"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
-test-paths: ["tests"]
 
 models:
-  waves:
-    +materialized: table
 
+  motherduck_pipeline:
+    +persist_docs:
+      relation: true
+      columns: true
+    staging:
+      +materialized: table
+      stg_open_meteo:
+        +schema: stg_open_meteo

@@ -1,4 +1,4 @@
-waves:
+default:
   target: motherduck
   outputs:
     duckdb:
@@ -9,7 +9,10 @@ waves:
 
     motherduck:
       type: duckdb
-      path: md:waves
-      schema: waves
+      path: md:transformed
+      schema: dbt
       threads: 4
-
+      extensions: [motherduck]
+      attach:
+        - path: "md:raw"
+          alias: raw     

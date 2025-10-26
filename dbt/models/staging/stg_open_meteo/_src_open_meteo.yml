@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw_open_meteo
+    database: raw
+    schema: open_meteo
+    tables:
+      - name: swell_data
+
