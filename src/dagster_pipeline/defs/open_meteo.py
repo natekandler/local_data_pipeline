@@ -14,7 +14,7 @@ LONGITUDE = -117.3483
 LOCATION_NAME = os.environ.get("LOCATION_NAME", "Tamarack")
 DUCKDB_PATH = os.environ.get("DUCKDB_PATH", os.path.join(os.getcwd(), "data", "raw.duckdb"))
 # When set, use MotherDuck instead of local DuckDB file
-MOTHERDUCK_DB = os.environ.get("MOTHERDUCK_DB")  # e.g., "waves". Requires MOTHERDUCK_TOKEN in env
+MOTHERDUCK_DB = os.environ.get("MOTHERDUCK_DB_FOO")  # e.g., "waves". Requires MOTHERDUCK_TOKEN in env
 
 LOCATIONS = {"Tamarack": {33.1505, -117.3483}, "Turnarounds": {33.1200, -117.3274}, "Oside_pier": {33.1934, -117.3860}}
 

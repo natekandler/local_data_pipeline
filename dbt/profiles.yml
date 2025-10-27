@@ -1,11 +1,14 @@
 default:
-  target: motherduck
+  target: duckdb
   outputs:
     duckdb:
       type: duckdb
-      path: ./data/waves.duckdb
-      schema: waves
+      path: ../data/transformed.duckdb
+      schema: dbt
       threads: 4
+      attach:
+        - path: ../data/raw.duckdb
+          alias: raw    
 
     motherduck:
       type: duckdb
