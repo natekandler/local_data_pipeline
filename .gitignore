@@ -209,3 +209,7 @@ __marimo__/
 dbt/.user.yml
 dbt/target/
 dbt/logs/
+
+# Duckdb
+data/*
+!data/.gitkeep

@@ -1,5 +1,5 @@
 default:
-  target: duckdb
+  target: motherduck
   outputs:
     duckdb:
       type: duckdb

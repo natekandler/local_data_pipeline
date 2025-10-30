@@ -14,7 +14,6 @@ nightly_assets_job = dg.define_asset_job(
 )
 
 
-# Schedule to run the job nightly
 nightly_assets_schedule = dg.ScheduleDefinition(
     job=nightly_assets_job,
     cron_schedule=NIGHTLY_CRON,

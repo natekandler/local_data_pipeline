@@ -9,13 +9,11 @@ import duckdb
 
 
 WAVE_API_URL = "https://marine-api.open-meteo.com/v1/marine"
-LATITUDE = 33.1505
-LONGITUDE = -117.3483
+
 LOCATION_NAME = os.environ.get("LOCATION_NAME", "Tamarack")
 DUCKDB_PATH = os.environ.get("DUCKDB_PATH", os.path.join(os.getcwd(), "data", "raw.duckdb"))
-# When set, use MotherDuck instead of local DuckDB file
-MOTHERDUCK_DB = os.environ.get("MOTHERDUCK_DB_FOO")  # e.g., "waves". Requires MOTHERDUCK_TOKEN in env
 
+PROD = os.environ.get("ENV") == 'prod'
 LOCATIONS = {"Tamarack": {33.1505, -117.3483}, "Turnarounds": {33.1200, -117.3274}, "Oside_pier": {33.1934, -117.3860}}
 
 def fetch_wave_data(latitude, longitude) -> Dict[str, Any]:
@@ -41,9 +39,8 @@ def fetch_wave_data(latitude, longitude) -> Dict[str, Any]:
     return response.json()
 
 def _connect_duckdb():
-    if MOTHERDUCK_DB:
-        # MOTHERDUCK_TOKEN should be present in the environment for auth
-        return duckdb.connect(f"md:{MOTHERDUCK_DB}")
+    if PROD:
+        return duckdb.connect(f"md:raw")
     # Fallback to local DuckDB file
     os.makedirs(os.path.dirname(DUCKDB_PATH), exist_ok=True)
     return duckdb.connect(DUCKDB_PATH)
@@ -82,13 +79,13 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
     finally:
         con.close()
 
-    target = f"md:{MOTHERDUCK_DB}" if MOTHERDUCK_DB else DUCKDB_PATH
+    target = f"md:raw" if PROD else DUCKDB_PATH
     context.log.info(f"Wrote 1 raw record for location '{location}' to DuckDB at {target}")
 
     return dg.MaterializeResult(
         metadata={
             "rows": 1,
-            "location": LOCATION_NAME,
+            "location": location,
             "timestamp": now_ts.isoformat(),
             "duckdb_path": target,
             "table": "open_meteo.swell_data",
@@ -107,7 +104,7 @@ def open_meteo(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
     Partitioned by: location
     """
     # Ensure local directory exists only when not using MotherDuck
-    if not MOTHERDUCK_DB:
+    if not PROD:
         os.makedirs(os.path.dirname(DUCKDB_PATH), exist_ok=True)
     
     for location in LOCATIONS:
