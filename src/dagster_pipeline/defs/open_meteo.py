@@ -10,14 +10,13 @@ import duckdb
 
 WAVE_API_URL = "https://marine-api.open-meteo.com/v1/marine"
 
-LOCATION_NAME = os.environ.get("LOCATION_NAME", "Tamarack")
 DUCKDB_PATH = os.environ.get("DUCKDB_PATH", os.path.join(os.getcwd(), "data", "raw.duckdb"))
 
 PROD = os.environ.get("ENV") == 'prod'
 LOCATIONS = {"Tamarack": {33.1505, -117.3483}, "Turnarounds": {33.1200, -117.3274}, "Oside_pier": {33.1934, -117.3860}}
 
 def fetch_wave_data(latitude, longitude) -> Dict[str, Any]:
-    """Fetch wave data from Open Meteo Marine API."""
+    # Fetch wave data from Open Meteo Marine API
     params = {
         "latitude": latitude,
         "longitude": longitude,
@@ -60,7 +59,6 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
     # Append to DuckDB table raw.open_meteo
     con = _connect_duckdb()
     try:
-        # Use a schema that does not conflict with the database name
         con.execute("CREATE SCHEMA IF NOT EXISTS open_meteo")
         con.execute(
             """
@@ -94,11 +92,11 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
 
 
 @dg.asset(
-    description="Raw wave data from Open Meteo Marine API stored as Delta Lake on S3",
+    description="Raw wave data from Open Meteo Marine API stored in DuckDB",
     group_name="wave_data",
 )
 def open_meteo(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
-    """Fetch wave data and write a single-row raw record to Delta on S3.
+    """Fetch wave data and write a single-row into DuckDB.
 
     Columns: timestamp (UTC), location (string), data (JSON string)
     Partitioned by: location

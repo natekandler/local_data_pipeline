@@ -96,6 +96,12 @@ WHERE table_schema='waves' AND table_type='VIEW';
 SELECT * FROM raw.open_meteo ORDER BY timestamp DESC LIMIT 5;
 
 
+#### Open new session of transformed
+duckdb /Users/nkandler/projects/dagster/data/transformed.duckdb
+
+Load raw schema
+ATTACH '/Users/nkandler/projects/dagster/data/raw.duckdb' as raw;
+
 ## Scheduling nightly runs
 
 This project defines a nightly schedule that materializes all assets.
