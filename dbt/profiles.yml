@@ -1,5 +1,5 @@
 default:
-  target: motherduck
+  target: duckdb
   outputs:
     duckdb:
       type: duckdb
@@ -9,13 +9,3 @@ default:
       attach:
         - path: ../data/raw.duckdb
           alias: raw    
-
-    motherduck:
-      type: duckdb
-      path: md:transformed
-      schema: dbt
-      threads: 4
-      extensions: [motherduck]
-      attach:
-        - path: "md:raw"
-          alias: raw     
