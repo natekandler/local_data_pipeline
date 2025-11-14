@@ -16,7 +16,6 @@ select
     swell_wave_height,
     swell_wave_direction,
     swell_wave_period,
-    dt,
-    retrieved_at
+    dt
 from {{ ref('int_open_meteo__max_swell_per_day') }}
 

@@ -14,7 +14,7 @@ with ranked as (
             partition by dt, location
             order by swell_wave_height desc, timestamp desc
         ) as rn
-    from {{ ref('stg_open_meteo__swell_data_s3') }}
+    from {{ ref('stg_open_meteo__swell_data') }}
 )
 select
     timestamp,
@@ -25,8 +25,7 @@ select
     swell_wave_height,
     swell_wave_direction,
     swell_wave_period,
-    dt,
-    retrieved_at
+    dt
 from ranked
 where rn = 1
 

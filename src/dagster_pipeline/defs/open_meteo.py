@@ -38,8 +38,8 @@ def fetch_wave_data(latitude, longitude) -> Dict[str, Any]:
     return response.json()
 
 def _connect_duckdb():
-    if PROD:
-        return duckdb.connect(f"md:raw")
+    # if PROD:
+    #     return duckdb.connect(f"md:raw")
     # Fallback to local DuckDB file
     os.makedirs(os.path.dirname(DUCKDB_PATH), exist_ok=True)
     return duckdb.connect(DUCKDB_PATH)
@@ -77,7 +77,7 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
     finally:
         con.close()
 
-    target = f"md:raw" if PROD else DUCKDB_PATH
+    target = DUCKDB_PATH
     context.log.info(f"Wrote 1 raw record for location '{location}' to DuckDB at {target}")
 
     return dg.MaterializeResult(

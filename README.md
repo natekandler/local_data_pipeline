@@ -9,6 +9,8 @@ The purpose of this project is to provide a real environment to practice data en
    - `brew install duckdb`
 - Install dependencies 
    - `uv sync`
+- Buid db files in duckdb
+   - cd duckdb && uv run dbt build
 
 ## How the pipeline work?
 This project uses Dagster as an orchestration tool. All dagster assets are in the `defs` directory. 

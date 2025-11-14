@@ -213,3 +213,6 @@ dbt/logs/
 # Duckdb
 data/*
 !data/.gitkeep
+
+
+.DS_Store
