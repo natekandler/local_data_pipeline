@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: int_open_meteo__max_swell_per_day
+    description: >
+      For each day and location, keeps only the hour with the highest swell wave
+      height from the staged Open Meteo swell readings.
+    columns:
+      - name: dt
+        description: Date of the observation (UTC).
+        tests:
+          - not_null
+      - name: location
+        description: Location name for the observation.
+        tests:
+          - not_null
+      - name: swell_wave_height
+        description: Maximum swell wave height for the day (meters).
+

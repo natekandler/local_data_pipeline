@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: pres_open_meteo__daily_max_swell
+    description: Daily maximum swell metrics sourced from the intermediate Open Meteo model.
+
