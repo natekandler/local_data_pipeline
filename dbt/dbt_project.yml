@@ -13,5 +13,10 @@ models:
       columns: true
     staging:
       +materialized: table
-      stg_open_meteo:
-        +schema: stg_open_meteo
+      +schema: stg_open_meteo
+    intermediate:
+      +materialized: table
+      +schema: int_open_meteo
+    presentation:
+      +materialized: table
+      +schema: open_meteo

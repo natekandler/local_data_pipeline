@@ -214,5 +214,5 @@ dbt/logs/
 data/*
 !data/.gitkeep
 
-
 .DS_Store
+**/.DS_Store

@@ -93,7 +93,7 @@ def fetch_and_write_data(context: dg.AssetExecutionContext, latitude, longitude,
 
 @dg.asset(
     description="Raw wave data from Open Meteo Marine API stored in DuckDB",
-    group_name="wave_data",
+    group_name="swell_data",
 )
 def open_meteo(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
     """Fetch wave data and write a single-row into DuckDB.
@@ -101,10 +101,19 @@ def open_meteo(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
     Columns: timestamp (UTC), location (string), data (JSON string)
     Partitioned by: location
     """
-    # Ensure local directory exists only when not using MotherDuck
-    if not PROD:
-        os.makedirs(os.path.dirname(DUCKDB_PATH), exist_ok=True)
+    os.makedirs(os.path.dirname(DUCKDB_PATH), exist_ok=True)
     
     for location in LOCATIONS:
         lat, lon = LOCATIONS[location]
         fetch_and_write_data(context, lat, lon, location)
+
+# Dummy jobs to illustrate dependencies
+@dg.asset(deps=[open_meteo], group_name="swell_data")
+def open_meteo_two(context: dg.AssetExecutionContext):
+    context.log.info("Running open_meteo_two after open_meteo_s3.")
+    return {"status": "ok"}
+
+
+@dg.asset(deps=[open_meteo_two], group_name="swell_data")
+def open_meteo_three(context: dg.AssetExecutionContext):
+    context.log.info("Running open_meteo_three after open_meteo_two.")
